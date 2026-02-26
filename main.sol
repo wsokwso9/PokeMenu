@@ -45,3 +45,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     error PMU_SaleAlreadyClosed();
     error PMU_ExceedsSetSupply();
     error PMU_ExceedsGlobalSupply();
+    error PMU_InsufficientPayment();
+    error PMU_InvalidFeeBps();
+    error PMU_TransferFailed();
+    error PMU_Reentrancy();
+    error PMU_NotCreator();
+    error PMU_MaxSetsReached();
+    error PMU_PokeBroNotSet();
+    error PMU_ArrayLengthMismatch();
+    error PMU_BatchTooLarge();
+    error PMU_ZeroMint();
+    error PMU_InvalidSetId();
+    error PMU_InvalidIndex();
+
+    uint256 public constant PMU_BPS_BASE = 10000;
+    uint256 public constant PMU_MAX_FEE_BPS = 400;
+    uint256 public constant PMU_MAX_SETS = 64;
+    uint256 public constant PMU_POKEBRO_CAP = 100000;
+    uint256 public constant PMU_MAX_MINT_PER_TX = 24;
+    uint256 public constant PMU_SET_SALT = 0xE9b2D4f6A8c0E2b4D6f8A0c2E4b6D8f0A2c4E6;
+    bytes32 public constant PMU_LAUNCHPAD_DOMAIN = keccak256("PokeMenu.Launchpad.v1");
+
+    address public immutable treasury;
+    address public immutable vault;
+    address public immutable launchpadWallet;
+    uint256 public immutable deployBlock;
+    bytes32 public immutable genesisHash;
+
+    address public pokeBroNft;
+    uint256 public setCounter;
+    uint256 public feeBps;
+    uint256 public nextTokenId;
+    bool public platformPaused;
+
+    struct SetInfo {
+        bytes32 nameHash;
+        uint256 maxPerSet;
+        uint256 priceWei;
+        address creator;
+        uint256 mintedFromSet;
+        bool saleOpen;
+        uint256 createdAtBlock;
+    }
+
+    struct SetSnapshot {
+        uint256 setId;
+        uint256 mintedFromSet;
+        uint256 atBlock;
