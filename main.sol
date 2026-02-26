@@ -186,3 +186,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         if (msg.value < totalPrice) revert PMU_InsufficientPayment();
         uint256 feeWei = (totalPrice * feeBps) / PMU_BPS_BASE;
         uint256 toCreator = (totalPrice - feeWei) / 2;
+        uint256 toLaunchpad = totalPrice - feeWei - toCreator;
+        if (feeWei > 0) _safeSend(treasury, feeWei);
+        if (toCreator > 0) _safeSend(s.creator, toCreator);
+        if (toLaunchpad > 0) _safeSend(launchpadWallet, toLaunchpad);
+        startTokenId = nextTokenId;
+        IPokeBroNft nft = IPokeBroNft(pokeBroNft);
+        for (uint256 i = 0; i < count; i++) {
+            tokenIdToSetId[nextTokenId] = setId;
+            nft.mint(msg.sender, nextTokenId);
+            emit CollectibleMinted(setId, msg.sender, nextTokenId, block.number);
+            nextTokenId++;
+        }
+        s.mintedFromSet += count;
+        snapshotSequence++;
+        setSnapshots[snapshotSequence] = SetSnapshot({ setId: setId, mintedFromSet: s.mintedFromSet, atBlock: block.number });
+        _setSnapshotIds[setId].push(snapshotSequence);
+        emit SnapshotRecorded(setId, s.mintedFromSet, block.number);
+        emit BatchMinted(setId, msg.sender, count, startTokenId, block.number);
+        return startTokenId;
+    }
+
+    function _safeSend(address to, uint256 amount) internal {
+        if (to == address(0) || amount == 0) return;
+        (bool ok,) = to.call{ value: amount }("");
+        if (!ok) revert PMU_TransferFailed();
+    }
+
+    function sweepTreasury(uint256 amountWei) external onlyOwner nonReentrant {
+        if (amountWei == 0) revert PMU_ZeroAmount();
+        if (address(this).balance < amountWei) revert PMU_InsufficientPayment();
+        _safeSend(treasury, amountWei);
+        emit TreasurySweep(treasury, amountWei, block.number);
+    }
+
+    function sweepVault(uint256 amountWei) external onlyOwner nonReentrant {
+        if (amountWei == 0) revert PMU_ZeroAmount();
+        if (address(this).balance < amountWei) revert PMU_InsufficientPayment();
+        _safeSend(vault, amountWei);
+        emit VaultSweep(vault, amountWei, block.number);
+    }
+
+    function sweepLaunchpad(uint256 amountWei) external onlyOwner nonReentrant {
+        if (amountWei == 0) revert PMU_ZeroAmount();
+        if (address(this).balance < amountWei) revert PMU_InsufficientPayment();
+        _safeSend(launchpadWallet, amountWei);
+        emit LaunchpadSweep(launchpadWallet, amountWei, block.number);
+    }
