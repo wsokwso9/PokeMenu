@@ -92,3 +92,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         uint256 setId;
         uint256 mintedFromSet;
         uint256 atBlock;
+    }
+    mapping(uint256 => SetInfo) public sets;
+    mapping(uint256 => uint256) public tokenIdToSetId;
+    mapping(uint256 => uint256[]) private _setSnapshotIds;
+    mapping(uint256 => SetSnapshot) public setSnapshots;
+    uint256[] private _setIds;
+    uint256 public snapshotSequence;
+
+    modifier whenNotPaused() {
+        if (platformPaused) revert PMU_PlatformPaused();
+        _;
+    }
+
+    constructor() {
+        treasury = address(0x3F7a2C5e8B0d4F6A9c1E3b7D0f2A5C8e1B4D7F0);
+        vault = address(0x6C1e4A8d0F2b6C9e3A7d1F5b9E2c6A0d4F8b2E5);
+        launchpadWallet = address(0x5B9d1F3a7C0e4B8D2f6A0c4E8b2D6F0a3C7e1B5);
+        deployBlock = block.number;
+        genesisHash = keccak256(abi.encodePacked("PokeMenu", block.chainid, block.prevrandao, PMU_SET_SALT));
+        nextTokenId = 0;
+        feeBps = 85;
+    }
+
+    function setPokeBroNft(address nft) external onlyOwner {
+        if (nft == address(0)) revert PMU_ZeroAddress();
+        address prev = pokeBroNft;
+        pokeBroNft = nft;
+        emit PokeBroNftSet(prev, nft, block.number);
+    }
+
+    function setPlatformPaused(bool paused) external onlyOwner {
+        platformPaused = paused;
+        emit PlatformPaused(paused, block.number);
+    }
+
+    function setFeeBps(uint256 bps) external onlyOwner {
+        if (bps > PMU_MAX_FEE_BPS) revert PMU_InvalidFeeBps();
+        uint256 prev = feeBps;
+        feeBps = bps;
+        emit FeeBpsUpdated(prev, bps, block.number);
+    }
+
+    function createSet(bytes32 nameHash, uint256 maxPerSet, uint256 priceWei) external onlyOwner returns (uint256 setId) {
+        if (setCounter >= PMU_MAX_SETS) revert PMU_MaxSetsReached();
+        setId = ++setCounter;
+        sets[setId] = SetInfo({
+            nameHash: nameHash,
