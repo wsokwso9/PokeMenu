@@ -139,3 +139,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         setId = ++setCounter;
         sets[setId] = SetInfo({
             nameHash: nameHash,
+            maxPerSet: maxPerSet,
+            priceWei: priceWei,
+            creator: msg.sender,
+            mintedFromSet: 0,
+            saleOpen: false,
+            createdAtBlock: block.number
+        });
+        _setIds.push(setId);
+        emit SetCreated(setId, nameHash, maxPerSet, priceWei, msg.sender, block.number);
+        return setId;
+    }
+
+    function openSale(uint256 setId) external onlyOwner {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        if (s.saleOpen) revert PMU_SaleAlreadyOpen();
+        s.saleOpen = true;
+        emit LaunchpadSaleOpened(setId, block.number);
+    }
+
+    function closeSale(uint256 setId) external onlyOwner {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        if (!s.saleOpen) revert PMU_SaleAlreadyClosed();
+        s.saleOpen = false;
+        emit LaunchpadSaleClosed(setId, block.number);
+    }
+
+    function updateSetPrice(uint256 setId, uint256 priceWei) external onlyOwner {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        sets[setId].priceWei = priceWei;
+        emit SetConfigUpdated(setId, priceWei, sets[setId].saleOpen, block.number);
+    }
+
+    function mintFromSet(uint256 setId, uint256 count) external payable nonReentrant whenNotPaused returns (uint256 startTokenId) {
+        if (pokeBroNft == address(0)) revert PMU_PokeBroNotSet();
+        if (count == 0) revert PMU_ZeroMint();
+        if (count > PMU_MAX_MINT_PER_TX) revert PMU_BatchTooLarge();
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        if (!s.saleOpen) revert PMU_SaleNotOpen();
+        if (s.mintedFromSet + count > s.maxPerSet) revert PMU_ExceedsSetSupply();
+        if (nextTokenId + count > PMU_POKEBRO_CAP) revert PMU_ExceedsGlobalSupply();
+        uint256 totalPrice = s.priceWei * count;
+        if (msg.value < totalPrice) revert PMU_InsufficientPayment();
+        uint256 feeWei = (totalPrice * feeBps) / PMU_BPS_BASE;
+        uint256 toCreator = (totalPrice - feeWei) / 2;
