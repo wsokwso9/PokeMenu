@@ -233,3 +233,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         _safeSend(launchpadWallet, amountWei);
         emit LaunchpadSweep(launchpadWallet, amountWei, block.number);
     }
+
+    function getSetInfo(uint256 setId) external view returns (
+        bytes32 nameHash,
+        uint256 maxPerSet,
+        uint256 priceWei,
+        address creator,
+        uint256 mintedFromSet,
+        bool saleOpen,
+        uint256 createdAtBlock
+    ) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return (s.nameHash, s.maxPerSet, s.priceWei, s.creator, s.mintedFromSet, s.saleOpen, s.createdAtBlock);
+    }
+
+    function getSetIds() external view returns (uint256[] memory) {
+        return _setIds;
+    }
+
+    function getConfig() external view returns (address nft, uint256 nextId, uint256 feeBps_, bool paused_) {
+        return (pokeBroNft, nextTokenId, feeBps, platformPaused);
+    }
+
+    function pause() external onlyOwner { _pause(); }
+    function unpause() external onlyOwner { _unpause(); }
+
+    function updateSetCreator(uint256 setId, address newCreator) external onlyOwner {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        if (newCreator == address(0)) revert PMU_ZeroAddress();
+        address prev = sets[setId].creator;
+        sets[setId].creator = newCreator;
+        emit SetCreatorUpdated(setId, prev, newCreator, block.number);
+    }
+
+    function updateSetMaxPerSet(uint256 setId, uint256 maxPerSet) external onlyOwner {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        uint256 prev = sets[setId].maxPerSet;
+        if (maxPerSet < sets[setId].mintedFromSet) revert PMU_ExceedsSetSupply();
+        sets[setId].maxPerSet = maxPerSet;
+        emit SetMaxPerSetUpdated(setId, prev, maxPerSet, block.number);
+    }
+
+    function updateSetNameHash(uint256 setId, bytes32 nameHash) external onlyOwner {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        bytes32 prev = sets[setId].nameHash;
+        sets[setId].nameHash = nameHash;
+        emit SetNameHashUpdated(setId, prev, nameHash, block.number);
