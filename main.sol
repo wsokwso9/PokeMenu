@@ -280,3 +280,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         bytes32 prev = sets[setId].nameHash;
         sets[setId].nameHash = nameHash;
         emit SetNameHashUpdated(setId, prev, nameHash, block.number);
+    }
+
+    function batchCreateSets(bytes32[] calldata nameHashes, uint256[] calldata maxPerSets, uint256[] calldata pricesWei) external onlyOwner returns (uint256[] memory setIds) {
+        if (nameHashes.length != maxPerSets.length || nameHashes.length != pricesWei.length) revert PMU_ArrayLengthMismatch();
+        if (nameHashes.length > 12) revert PMU_BatchTooLarge();
+        setIds = new uint256[](nameHashes.length);
+        for (uint256 i = 0; i < nameHashes.length; i++) {
+            if (setCounter >= PMU_MAX_SETS) revert PMU_MaxSetsReached();
+            uint256 setId = ++setCounter;
+            sets[setId] = SetInfo({
+                nameHash: nameHashes[i],
+                maxPerSet: maxPerSets[i],
+                priceWei: pricesWei[i],
+                creator: msg.sender,
+                mintedFromSet: 0,
+                saleOpen: false,
+                createdAtBlock: block.number
+            });
+            _setIds.push(setId);
+            setIds[i] = setId;
+            emit SetCreated(setId, nameHashes[i], maxPerSets[i], pricesWei[i], msg.sender, block.number);
+        }
+        return setIds;
+    }
+
+    function getSetStruct(uint256 setId) external view returns (SetInfo memory) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId];
+    }
+
+    function getSetSnapshot(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+
+    function getSetSnapshotCount(uint256 setId) external view returns (uint256) {
+        return _setSnapshotIds[setId].length;
+    }
+
+    function getSetSnapshotIdAt(uint256 setId, uint256 index) external view returns (uint256) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return _setSnapshotIds[setId][index];
+    }
+
+    function getTreasuryAddress() external view returns (address) { return treasury; }
+    function getVaultAddress() external view returns (address) { return vault; }
+    function getLaunchpadWalletAddress() external view returns (address) { return launchpadWallet; }
+    function getPokeBroNft() external view returns (address) { return pokeBroNft; }
