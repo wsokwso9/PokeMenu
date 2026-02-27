@@ -1032,3 +1032,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         uint256 len = _setIds.length;
         if (offset >= len) return new uint256[](0);
         uint256 end = offset + limit;
+        if (end > len) end = len;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = _setIds[offset + i];
+        return out;
+    }
+
+    function getSetSnapshotCountForDisplay(uint256 setId) external view returns (uint256) {
+        return _setSnapshotIds[setId].length;
+    }
+
+    function getSetSnapshotForDisplay(uint256 snapshotId) external view returns (uint256 setId_, uint256 mintedFromSet_, uint256 atBlock_) {
+        SetSnapshot storage sn = setSnapshots[snapshotId];
+        return (sn.setId, sn.mintedFromSet, sn.atBlock);
+    }
+
+    function getSetSnapshotForDisplayBySetAndIndex(uint256 setId, uint256 index) external view returns (uint256 snapshotId_, uint256 mintedFromSet_, uint256 atBlock_) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        uint256 sid = _setSnapshotIds[setId][index];
+        SetSnapshot storage sn = setSnapshots[sid];
+        return (sid, sn.mintedFromSet, sn.atBlock);
+    }
+
+    function getTokenIdSetId(uint256 tokenId) external view returns (uint256) {
+        return tokenIdToSetId[tokenId];
+    }
+
+    function getSetPrice(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].priceWei;
+    }
+
+    function getSetMaxPerSet(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].maxPerSet;
+    }
+
+    function getSetMinted(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].mintedFromSet;
+    }
+
+    function getSetSaleStatus(uint256 setId) external view returns (bool) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].saleOpen;
+    }
+
