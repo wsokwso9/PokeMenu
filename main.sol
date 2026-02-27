@@ -703,3 +703,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     function getSetIdsRange(uint256 from, uint256 to) external view returns (uint256[] memory) {
         uint256 len = _setIds.length;
         if (from >= len) return new uint256[](0);
+        if (to > len) to = len;
+        if (to <= from) return new uint256[](0);
+        uint256 n = to - from;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = _setIds[from + i];
+        return out;
+    }
+    function getSetSnapshotIdsRange(uint256 setId, uint256 from, uint256 to) external view returns (uint256[] memory) {
+        uint256[] storage ids = _setSnapshotIds[setId];
+        uint256 len = ids.length;
+        if (from >= len) return new uint256[](0);
+        if (to > len) to = len;
+        if (to <= from) return new uint256[](0);
+        uint256 n = to - from;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = ids[from + i];
+        return out;
+    }
+    function getSetSnapshotStructBySnapshotId(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+    function getSetSnapshotStructBySetIdAndIndex(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return setSnapshots[_setSnapshotIds[setId][index]];
+    }
+    function getSetSnapshotStructBySetIdAndSnapshotIndex(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return setSnapshots[_setSnapshotIds[setId][index]];
+    }
+    function getSetSnapshotStructBySnapshotId(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+    function getSetSnapshotStructBySetAndSnapshotIndex(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return setSnapshots[_setSnapshotIds[setId][index]];
+    }
+    function getSetSnapshotStructBySetAndIndex(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return setSnapshots[_setSnapshotIds[setId][index]];
+    }
+    function getSetSnapshotStructBySnapshotIdValue(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+    function getSetSnapshotStructBySetIdAndIndexValue(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return setSnapshots[_setSnapshotIds[setId][index]];
+    }
