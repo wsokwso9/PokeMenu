@@ -844,3 +844,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
 
     function getSetSnapshotIdsPaginatedV2(uint256 setId, uint256 page, uint256 pageSize) external view returns (uint256[] memory) {
         return getSetSnapshotIdsPaginated(setId, page, pageSize);
+    }
+
+    function totalSetCount() external view returns (uint256) {
+        return _setIds.length;
+    }
+
+    function totalSnapshotCount() external view returns (uint256) {
+        return snapshotSequence;
+    }
+
+    function isPokeBroSet() external view returns (bool) {
+        return pokeBroNft != address(0);
+    }
+
+    function getSetPriceForCount(uint256 setId, uint256 count) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].priceWei * count;
+    }
+
+    function getSetFeeForTotal(uint256 totalWei) external view returns (uint256) {
+        return (totalWei * feeBps) / PMU_BPS_BASE;
+    }
+
+    function getSetCreatorShare(uint256 totalWei, uint256 feeWei) external pure returns (uint256) {
+        return (totalWei - feeWei) / 2;
+    }
+
+    function getSetLaunchpadShare(uint256 totalWei, uint256 feeWei, uint256 creatorShare) external pure returns (uint256) {
+        return totalWei - feeWei - creatorShare;
+    }
+
+    function getSetRemainingSupply(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+    }
+
+    function getGlobalRemainingSupply() external view returns (uint256) {
+        return nextTokenId >= PMU_POKEBRO_CAP ? 0 : PMU_POKEBRO_CAP - nextTokenId;
+    }
+
+    function getSetIdsAll() external view returns (uint256[] memory) {
+        return _setIds;
+    }
+
+    function getSetSnapshotIdsAll(uint256 setId) external view returns (uint256[] memory) {
+        return _setSnapshotIds[setId];
