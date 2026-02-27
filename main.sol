@@ -891,3 +891,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
 
     function getSetSnapshotIdsAll(uint256 setId) external view returns (uint256[] memory) {
         return _setSnapshotIds[setId];
+    }
+
+    function getSetSnapshotBySnapshotId(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+
+    function getSetSnapshotBySetIdAndIndex(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return setSnapshots[_setSnapshotIds[setId][index]];
+    }
+
+    function platformVersion() external pure returns (uint8 major, uint8 minor) {
+        return (1, 0);
+    }
+
+    function chainIdAtDeploy() external view returns (uint256) {
+        return block.chainid;
+    }
+
+    function blockNumberAtDeploy() external view returns (uint256) {
+        return deployBlock;
+    }
+
+    function hashGenesis() external view returns (bytes32) {
+        return genesisHash;
+    }
+
+    function treasuryBpsForMint() external view returns (uint256) {
+        return feeBps;
+    }
+
+    function launchpadDomainHash() external pure returns (bytes32) {
+        return PMU_LAUNCHPAD_DOMAIN;
+    }
+
+    function setSaltConstant() external pure returns (uint256) {
+        return PMU_SET_SALT;
+    }
+
+    function bpsBaseConstant() external pure returns (uint256) {
+        return PMU_BPS_BASE;
+    }
+
+    function maxFeeBpsConstant() external pure returns (uint256) {
+        return PMU_MAX_FEE_BPS;
+    }
+
