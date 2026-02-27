@@ -421,3 +421,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     function setCounterValue() external view returns (uint256) { return setCounter; }
     function feeBpsValue() external view returns (uint256) { return feeBps; }
     function platformPausedStatus() external view returns (bool) { return platformPaused; }
+    function deployBlockValue() external view returns (uint256) { return deployBlock; }
+    function genesisHashValue() external view returns (bytes32) { return genesisHash; }
+    function snapshotSequenceValue() external view returns (uint256) { return snapshotSequence; }
+    function setIdsLength() external view returns (uint256) { return _setIds.length; }
+    function bpsBaseValue() external pure returns (uint256) { return PMU_BPS_BASE; }
+    function maxFeeBpsValue() external pure returns (uint256) { return PMU_MAX_FEE_BPS; }
+    function maxSetsValue() external pure returns (uint256) { return PMU_MAX_SETS; }
+    function pokebroCapValue() external pure returns (uint256) { return PMU_POKEBRO_CAP; }
+    function maxMintPerTxValue() external pure returns (uint256) { return PMU_MAX_MINT_PER_TX; }
+    function setSaltValue() external pure returns (uint256) { return PMU_SET_SALT; }
+    function launchpadDomainValue() external pure returns (bytes32) { return PMU_LAUNCHPAD_DOMAIN; }
+    function setNameHash(uint256 setId) external view returns (bytes32) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].nameHash;
+    }
+    function setMaxPerSet(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].maxPerSet;
+    }
+    function setPriceWei(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].priceWei;
+    }
+    function setCreator(uint256 setId) external view returns (address) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].creator;
+    }
+    function setMintedFromSet(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].mintedFromSet;
+    }
+    function setSaleOpen(uint256 setId) external view returns (bool) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].saleOpen;
+    }
+    function setCreatedAtBlock(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].createdAtBlock;
+    }
+    function tokenIdToSetIdMapping(uint256 tokenId) external view returns (uint256) {
+        return tokenIdToSetId[tokenId];
+    }
+    function remainingSupplyForSet(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+    }
