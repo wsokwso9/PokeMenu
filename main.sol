@@ -468,3 +468,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         SetInfo storage s = sets[setId];
         return s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
     }
+    function remainingGlobalSupply() external view returns (uint256) {
+        return nextTokenId >= PMU_POKEBRO_CAP ? 0 : PMU_POKEBRO_CAP - nextTokenId;
+    }
+    function getSetIdsSlice(uint256 offset, uint256 limit) external view returns (uint256[] memory out) {
+        uint256 len = _setIds.length;
+        if (offset >= len) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > len) end = len;
+        uint256 n = end - offset;
+        out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = _setIds[offset + i];
+        return out;
+    }
+    function getSetInfoStruct(uint256 setId) external view returns (SetInfo memory) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId];
+    }
+    function getSetSnapshotStruct(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+    function getSetSnapshotIds(uint256 setId) external view returns (uint256[] memory) {
+        return _setSnapshotIds[setId];
+    }
+    function isSetSaleOpen(uint256 setId) external view returns (bool) {
+        return setId != 0 && setId <= setCounter && sets[setId].saleOpen;
+    }
+    function isSetExists(uint256 setId) external view returns (bool) {
+        return setId != 0 && setId <= setCounter;
+    }
+    function computeTotalPrice(uint256 setId, uint256 count) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].priceWei * count;
+    }
+    function computeFeeWei(uint256 totalWei) external view returns (uint256) {
+        return (totalWei * feeBps) / PMU_BPS_BASE;
+    }
+    function computeCreatorShare(uint256 totalWei, uint256 feeWei) external pure returns (uint256) {
+        return (totalWei - feeWei) / 2;
+    }
+    function computeLaunchpadShare(uint256 totalWei, uint256 feeWei, uint256 creatorShare) external pure returns (uint256) {
+        return totalWei - feeWei - creatorShare;
+    }
+    function getImmutableAddresses() external view returns (address treasury_, address vault_, address launchpad_) {
+        return (treasury, vault, launchpadWallet);
+    }
+    function getConfigStruct() external view returns (address nft_, uint256 nextId_, uint256 feeBps_, bool paused_, uint256 setCounter_) {
+        return (pokeBroNft, nextTokenId, feeBps, platformPaused, setCounter);
