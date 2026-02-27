@@ -985,3 +985,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         SetInfo storage s = sets[setId];
         return (s.nameHash, s.priceWei, s.mintedFromSet, s.maxPerSet, s.saleOpen, s.creator);
     }
+
+    function getSetInfoForDisplayV3(uint256 setId) external view returns (
+        bytes32 nameHash_,
+        uint256 maxPerSet_,
+        uint256 priceWei_,
+        address creator_,
+        uint256 mintedFromSet_,
+        bool saleOpen_,
+        uint256 createdAtBlock_,
+        uint256 remainingSupply_
+    ) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        uint256 rem = s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+        return (s.nameHash, s.maxPerSet, s.priceWei, s.creator, s.mintedFromSet, s.saleOpen, s.createdAtBlock, rem);
+    }
+
+    function getConfigForDisplay() external view returns (address nft_, uint256 nextId_, uint256 setsCount_, uint256 feeBps_, bool paused_) {
+        return (pokeBroNft, nextTokenId, _setIds.length, feeBps, platformPaused);
+    }
+
+    function getConfigForDisplayV2() external view returns (
+        address nft_,
+        uint256 nextId_,
+        uint256 setsCount_,
+        uint256 feeBps_,
+        bool paused_,
+        address treasury_,
+        address vault_,
+        address launchpad_
+    ) {
+        return (pokeBroNft, nextTokenId, _setIds.length, feeBps, platformPaused, treasury, vault, launchpadWallet);
+    }
+
+    function getSetIdsForDisplay(uint256 limit) external view returns (uint256[] memory) {
+        uint256 len = _setIds.length;
+        if (limit == 0 || len == 0) return new uint256[](0);
+        if (limit > len) limit = len;
+        uint256[] memory out = new uint256[](limit);
+        for (uint256 i = 0; i < limit; i++) out[i] = _setIds[i];
+        return out;
+    }
+
+    function getSetIdsForDisplayOffset(uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        uint256 len = _setIds.length;
+        if (offset >= len) return new uint256[](0);
+        uint256 end = offset + limit;
