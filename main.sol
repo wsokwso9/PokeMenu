@@ -515,3 +515,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     }
     function getConfigStruct() external view returns (address nft_, uint256 nextId_, uint256 feeBps_, bool paused_, uint256 setCounter_) {
         return (pokeBroNft, nextTokenId, feeBps, platformPaused, setCounter);
+    }
+    function getSetAt(uint256 index) external view returns (uint256) {
+        if (index >= _setIds.length) revert PMU_InvalidIndex();
+        return _setIds[index];
+    }
+    function getSnapshotAt(uint256 setId, uint256 index) external view returns (uint256 snapshotId) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        return _setSnapshotIds[setId][index];
+    }
+    function getSnapshotStructById(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+    function validateSetId(uint256 setId) external view returns (bool) {
+        return setId != 0 && setId <= setCounter;
+    }
+    function validateMintParams(uint256 setId, uint256 count) external view returns (bool) {
+        if (pokeBroNft == address(0)) return false;
+        if (setId == 0 || setId > setCounter) return false;
+        if (count == 0 || count > PMU_MAX_MINT_PER_TX) return false;
+        SetInfo storage s = sets[setId];
+        if (!s.saleOpen) return false;
+        if (s.mintedFromSet + count > s.maxPerSet) return false;
+        if (nextTokenId + count > PMU_POKEBRO_CAP) return false;
+        return true;
+    }
+    function getSetInfoFull(uint256 setId) external view returns (
+        bytes32 nameHash_,
+        uint256 maxPerSet_,
+        uint256 priceWei_,
+        address creator_,
+        uint256 mintedFromSet_,
+        bool saleOpen_,
+        uint256 createdAtBlock_,
+        uint256 remainingSupply_
+    ) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        uint256 rem = s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+        return (s.nameHash, s.maxPerSet, s.priceWei, s.creator, s.mintedFromSet, s.saleOpen, s.createdAtBlock, rem);
+    }
+    function getAllSetIds() external view returns (uint256[] memory) {
+        return _setIds;
+    }
+    function getSetSnapshotCountForSet(uint256 setId) external view returns (uint256) {
+        return _setSnapshotIds[setId].length;
+    }
+    function getSetSnapshotIdForSetAt(uint256 setId, uint256 index) external view returns (uint256) {
