@@ -938,3 +938,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         return PMU_MAX_FEE_BPS;
     }
 
+    function maxSetsConstant() external pure returns (uint256) {
+        return PMU_MAX_SETS;
+    }
+
+    function pokebroCapConstant() external pure returns (uint256) {
+        return PMU_POKEBRO_CAP;
+    }
+
+    function maxMintPerTxConstant() external pure returns (uint256) {
+        return PMU_MAX_MINT_PER_TX;
+    }
+
+    function _computeFee(uint256 totalWei) internal view returns (uint256) {
+        return (totalWei * feeBps) / PMU_BPS_BASE;
+    }
+
+    function _computeCreatorShare(uint256 totalWei, uint256 feeWei) internal pure returns (uint256) {
+        return (totalWei - feeWei) / 2;
+    }
+
+    function _computeLaunchpadShare(uint256 totalWei, uint256 feeWei, uint256 creatorShare) internal pure returns (uint256) {
+        return totalWei - feeWei - creatorShare;
+    }
+
+    function getComputedFee(uint256 totalWei) external view returns (uint256) {
+        return _computeFee(totalWei);
+    }
+
+    function getComputedCreatorShare(uint256 totalWei, uint256 feeWei) external pure returns (uint256) {
+        return _computeCreatorShare(totalWei, feeWei);
+    }
+
+    function getComputedLaunchpadShare(uint256 totalWei, uint256 feeWei, uint256 creatorShare) external pure returns (uint256) {
+        return _computeLaunchpadShare(totalWei, feeWei, creatorShare);
+    }
+
+    function getSetInfoForDisplay(uint256 setId) external view returns (uint256 priceWei_, uint256 minted_, uint256 max_, bool saleOpen_) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return (s.priceWei, s.mintedFromSet, s.maxPerSet, s.saleOpen);
+    }
+
+    function getSetInfoForDisplayV2(uint256 setId) external view returns (bytes32 nameHash_, uint256 priceWei_, uint256 minted_, uint256 max_, bool saleOpen_, address creator_) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return (s.nameHash, s.priceWei, s.mintedFromSet, s.maxPerSet, s.saleOpen, s.creator);
+    }
