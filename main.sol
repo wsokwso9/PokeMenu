@@ -797,3 +797,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     }
 
     function getSetListForFrontend(uint256 fromIndex, uint256 toIndex) external view returns (uint256[] memory ids, uint256[] memory prices, bool[] memory saleOpen) {
+        uint256 len = _setIds.length;
+        if (fromIndex >= len) return (new uint256[](0), new uint256[](0), new bool[](0));
+        if (toIndex > len) toIndex = len;
+        if (toIndex <= fromIndex) return (new uint256[](0), new uint256[](0), new bool[](0));
+        uint256 n = toIndex - fromIndex;
+        ids = new uint256[](n);
+        prices = new uint256[](n);
+        saleOpen = new bool[](n);
+        for (uint256 i = 0; i < n; i++) {
+            uint256 sid = _setIds[fromIndex + i];
+            ids[i] = sid;
+            prices[i] = sets[sid].priceWei;
+            saleOpen[i] = sets[sid].saleOpen;
+        }
+        return (ids, prices, saleOpen);
+    }
+
+    function getSetDetailsForFrontend(uint256 setId) external view returns (
+        bytes32 nameHash_,
+        uint256 maxPerSet_,
+        uint256 priceWei_,
+        address creator_,
+        uint256 mintedFromSet_,
+        bool saleOpen_,
+        uint256 remaining_
+    ) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        uint256 rem = s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+        return (s.nameHash, s.maxPerSet, s.priceWei, s.creator, s.mintedFromSet, s.saleOpen, rem);
+    }
+
+    function computeMintCost(uint256 setId, uint256 count) external view returns (uint256 totalWei, uint256 feeWei, uint256 toCreator, uint256 toLaunchpad) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        totalWei = sets[setId].priceWei * count;
+        feeWei = (totalWei * feeBps) / PMU_BPS_BASE;
+        toCreator = (totalWei - feeWei) / 2;
+        toLaunchpad = totalWei - feeWei - toCreator;
+        return (totalWei, feeWei, toCreator, toLaunchpad);
+    }
+
+    function getSetIdsPaginatedV2(uint256 page, uint256 pageSize) external view returns (uint256[] memory) {
+        return getSetIdsPaginated(page, pageSize);
+    }
+
+    function getSetSnapshotIdsPaginatedV2(uint256 setId, uint256 page, uint256 pageSize) external view returns (uint256[] memory) {
+        return getSetSnapshotIdsPaginated(setId, page, pageSize);
