@@ -374,3 +374,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     function getSetCreatedAtBlock(uint256 setId) external view returns (uint256) {
         if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
         return sets[setId].createdAtBlock;
+    }
+    function getSetIdForToken(uint256 tokenId) external view returns (uint256) {
+        return tokenIdToSetId[tokenId];
+    }
+    function canMintFromSet(uint256 setId, uint256 count) external view returns (bool) {
+        if (pokeBroNft == address(0)) return false;
+        if (setId == 0 || setId > setCounter) return false;
+        SetInfo storage s = sets[setId];
+        if (!s.saleOpen) return false;
+        if (s.mintedFromSet + count > s.maxPerSet) return false;
+        if (nextTokenId + count > PMU_POKEBRO_CAP) return false;
+        return true;
+    }
+    function estimatePrice(uint256 setId, uint256 count) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].priceWei * count;
+    }
+    function estimateFee(uint256 setId, uint256 count) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        uint256 total = sets[setId].priceWei * count;
+        return (total * feeBps) / PMU_BPS_BASE;
+    }
+    function getRemainingSetSupply(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+    }
+    function getRemainingGlobalSupply() external view returns (uint256) {
+        return nextTokenId >= PMU_POKEBRO_CAP ? 0 : PMU_POKEBRO_CAP - nextTokenId;
+    }
+    function contractBalance() external view returns (uint256) { return address(this).balance; }
+    function emitConfigFrozen() external onlyOwner { emit ConfigFrozen(block.number); }
+
+    function _recordSnapshot(uint256 setId) internal {
+        snapshotSequence++;
+        setSnapshots[snapshotSequence] = SetSnapshot({ setId: setId, mintedFromSet: sets[setId].mintedFromSet, atBlock: block.number });
+        _setSnapshotIds[setId].push(snapshotSequence);
+    }
+
+    function treasuryAddress() external view returns (address) { return treasury; }
+    function vaultAddress() external view returns (address) { return vault; }
+    function launchpadWalletAddress() external view returns (address) { return launchpadWallet; }
+    function pokeBroNftAddress() external view returns (address) { return pokeBroNft; }
+    function nextTokenIdValue() external view returns (uint256) { return nextTokenId; }
+    function setCounterValue() external view returns (uint256) { return setCounter; }
+    function feeBpsValue() external view returns (uint256) { return feeBps; }
+    function platformPausedStatus() external view returns (bool) { return platformPaused; }
