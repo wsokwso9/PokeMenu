@@ -656,3 +656,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
     function getSetInfoExtra(uint256 setId) external view returns (
         bytes32 nameHash_,
         uint256 maxPerSet_,
+        uint256 priceWei_,
+        address creator_,
+        uint256 mintedFromSet_,
+        bool saleOpen_,
+        uint256 createdAtBlock_,
+        uint256 remainingSupply_,
+        uint256 snapshotCount_
+    ) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        uint256 rem = s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+        return (s.nameHash, s.maxPerSet, s.priceWei, s.creator, s.mintedFromSet, s.saleOpen, s.createdAtBlock, rem, _setSnapshotIds[setId].length);
+    }
+    function getSetIdsPaginated(uint256 page, uint256 pageSize) external view returns (uint256[] memory) {
+        uint256 len = _setIds.length;
+        if (page * pageSize >= len) return new uint256[](0);
+        uint256 start = page * pageSize;
+        uint256 end = start + pageSize;
+        if (end > len) end = len;
+        uint256 n = end - start;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = _setIds[start + i];
+        return out;
+    }
+    function getSetSnapshotIdsPaginated(uint256 setId, uint256 page, uint256 pageSize) external view returns (uint256[] memory) {
+        uint256[] storage ids = _setSnapshotIds[setId];
+        uint256 len = ids.length;
+        if (page * pageSize >= len) return new uint256[](0);
+        uint256 start = page * pageSize;
+        uint256 end = start + pageSize;
+        if (end > len) end = len;
+        uint256 n = end - start;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = ids[start + i];
+        return out;
+    }
+    function getSetSnapshotStructById(uint256 snapshotId) external view returns (SetSnapshot memory) {
+        return setSnapshots[snapshotId];
+    }
+    function getSetSnapshotStructBySetAndIndex(uint256 setId, uint256 index) external view returns (SetSnapshot memory) {
+        if (index >= _setSnapshotIds[setId].length) revert PMU_InvalidIndex();
+        uint256 sid = _setSnapshotIds[setId][index];
+        return setSnapshots[sid];
+    }
+    function getSetIdsRange(uint256 from, uint256 to) external view returns (uint256[] memory) {
+        uint256 len = _setIds.length;
+        if (from >= len) return new uint256[](0);
