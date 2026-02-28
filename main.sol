@@ -1126,3 +1126,33 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
 
     function launchpadDomainConstant() external pure returns (bytes32) { return PMU_LAUNCHPAD_DOMAIN; }
     function setSaltHex() external pure returns (uint256) { return PMU_SET_SALT; }
+    function deployBlockConstant() external view returns (uint256) { return deployBlock; }
+    function genesisHashConstant() external view returns (bytes32) { return genesisHash; }
+    function nextTokenIdConstant() external view returns (uint256) { return nextTokenId; }
+    function setCounterConstant() external view returns (uint256) { return setCounter; }
+    function feeBpsConstant() external view returns (uint256) { return feeBps; }
+    function platformPausedConstant() external view returns (bool) { return platformPaused; }
+    function snapshotSequenceConstant() external view returns (uint256) { return snapshotSequence; }
+    function setIdsLengthConstant() external view returns (uint256) { return _setIds.length; }
+
+    function getSetRemainingSupply(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        SetInfo storage s = sets[setId];
+        return s.maxPerSet > s.mintedFromSet ? s.maxPerSet - s.mintedFromSet : 0;
+    }
+    function getGlobalRemainingSupplyWei() external view returns (uint256) {
+        return nextTokenId >= PMU_POKEBRO_CAP ? 0 : PMU_POKEBRO_CAP - nextTokenId;
+    }
+    function pokeBroNftAddressImmutable() external view returns (address) { return pokeBroNft; }
+    function treasuryImmutable() external view returns (address) { return treasury; }
+    function vaultImmutable() external view returns (address) { return vault; }
+    function launchpadWalletImmutable() external view returns (address) { return launchpadWallet; }
+    function bpsBaseConstantValue() external pure returns (uint256) { return PMU_BPS_BASE; }
+    function maxFeeBpsConstantValue() external pure returns (uint256) { return PMU_MAX_FEE_BPS; }
+    function maxSetsConstantValue() external pure returns (uint256) { return PMU_MAX_SETS; }
+    function pokebroCapConstantValue() external pure returns (uint256) { return PMU_POKEBRO_CAP; }
+    function maxMintPerTxConstantValue() external pure returns (uint256) { return PMU_MAX_MINT_PER_TX; }
+
+    receive() external payable {}
+}
+
