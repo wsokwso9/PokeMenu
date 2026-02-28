@@ -1079,3 +1079,50 @@ contract PokeMenu is ReentrancyGuard, Pausable, Ownable {
         return sets[setId].saleOpen;
     }
 
+    function getSetCreatedBlock(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].createdAtBlock;
+    }
+
+    function getSetCreatorAddress(uint256 setId) external view returns (address) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].creator;
+    }
+
+    function getSetNameHashValue(uint256 setId) external view returns (bytes32) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].nameHash;
+    }
+
+    function getSetMaxPerSetValue(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].maxPerSet;
+    }
+
+    function getSetPriceWeiValue(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].priceWei;
+    }
+
+    function getSetCreatorValue(uint256 setId) external view returns (address) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].creator;
+    }
+
+    function getSetMintedValue(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].mintedFromSet;
+    }
+
+    function getSetSaleOpenValue(uint256 setId) external view returns (bool) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].saleOpen;
+    }
+
+    function getSetCreatedAtBlockValue(uint256 setId) external view returns (uint256) {
+        if (setId == 0 || setId > setCounter) revert PMU_SetNotFound();
+        return sets[setId].createdAtBlock;
+    }
+
+    function launchpadDomainConstant() external pure returns (bytes32) { return PMU_LAUNCHPAD_DOMAIN; }
+    function setSaltHex() external pure returns (uint256) { return PMU_SET_SALT; }
